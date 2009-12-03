@@ -23,4 +23,22 @@ template "/etc/apt/sources.list" do
   source "sources.list.erb"
 end
 
+class MyUbuntuFiles
+  extend Chef::Mixin::FindPreferredFile
+end
+
+node[:ubuntu][:additional_apt_keys].each do |apt_key|
+  execute "adding apt key #{apt_key}" do
+    file_name = MyUbuntuFiles.find_preferred_file(
+                  cookbook_name,
+                  :remote_file,
+                  apt_key,
+                  node[:fqdn],
+                  node[:platform],
+                  node[:platform_version]
+                )
+    command "apt-key add #{file_name}"
+  end
+end
+
 include_recipe "apt"
