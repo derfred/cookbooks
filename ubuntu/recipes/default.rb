@@ -27,17 +27,20 @@ class MyUbuntuFiles
   extend Chef::Mixin::FindPreferredFile
 end
 
-node[:ubuntu][:additional_apt_keys].each do |apt_key|
-  execute "adding apt key #{apt_key}" do
+node[:ubuntu][:additional_apt_keys].each do |apt_key_name, apt_key_file|
+  execute "adding apt key \"#{apt_key_name}\"" do
     file_name = MyUbuntuFiles.find_preferred_file(
                   cookbook_name,
                   :remote_file,
-                  apt_key,
+                  apt_key_file,
                   node[:fqdn],
                   node[:platform],
                   node[:platform_version]
                 )
     command "apt-key add #{file_name}"
+    not_if do
+      `apt-key list` =~ /#{apt_key_name}/
+    end
   end
 end
 
